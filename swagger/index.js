@@ -7,11 +7,16 @@ const options = {
       title: 'Backend API Warehouse',
       version: '1.0.0'
     },
-    components: require('./components/security'),
+    components: {
+      ...require('./components/security'),
+      schemas: {
+        ...require('./components/supplier'),
+      }
+    },
     paths: {
       ...require('./paths/auth'),
       ...require('./paths/users'),
-      
+      ...require('./paths/suppliers'),
     }
   },
   apis: []
