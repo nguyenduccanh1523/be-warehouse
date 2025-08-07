@@ -12,7 +12,7 @@ app.use(express.json());
 
 app.use('/api/users', userRoutes);
 app.use('/api/suppliers', supplierRoutes);
-// app.get('/api/customers', customerRoutes);
+app.use('/api/customers', customerRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 module.exports = app;

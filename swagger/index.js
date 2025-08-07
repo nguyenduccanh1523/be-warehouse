@@ -11,12 +11,14 @@ const options = {
       ...require('./components/security'),
       schemas: {
         ...require('./components/supplier'),
+        ...require('./components/customer'),
       }
     },
     paths: {
       ...require('./paths/auth'),
       ...require('./paths/users'),
       ...require('./paths/suppliers'),
+      ...require('./paths/customers'),
     }
   },
   apis: []
