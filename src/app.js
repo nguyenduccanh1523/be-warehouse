@@ -6,6 +6,8 @@ const userRoutes = require('./routes/user.routes');
 const customerRoutes = require('./routes/customer.routes');
 const supplierRoutes = require('./routes/supplier.routes');
 const productRoutes = require('./routes/product.routes');
+const orderRoutes = require('./routes/order.routes');
+const orderItemRoutes = require('./routes/orderitem.routes');
 
 const app = express();
 app.use(cors());
@@ -15,6 +17,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/orderitems', orderItemRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 module.exports = app;
