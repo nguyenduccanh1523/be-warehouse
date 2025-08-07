@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose port (3001 như bạn đang chạy local)
+EXPOSE 3001
+
+# Start app
+CMD ["node", "index.js"]
