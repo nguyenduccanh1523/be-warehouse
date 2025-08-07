@@ -12,6 +12,7 @@ RUN npm install
 COPY . .
 
 # Expose port (3002 như bạn đang chạy local)
+ENV PORT=3002
 EXPOSE 3002
 
 # Start app
