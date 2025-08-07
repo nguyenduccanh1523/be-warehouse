@@ -16,4 +16,4 @@ ENV PORT=3002
 EXPOSE 3002
 
 # Start app
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
