@@ -21,4 +21,13 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/orderitems', orderItemRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.get('/', (req, res) => {
+  res.send('🚀 API is alive on Railway!');
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+
 module.exports = app;
