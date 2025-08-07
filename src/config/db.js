@@ -2,6 +2,8 @@ const mysql = require("mysql2");
 require("dotenv").config();
 
 console.log("📦 Creating MySQL pool...");
+
+// 👉 Tạo pool gốc
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 3306,
@@ -13,7 +15,11 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-pool.getConnection()
+// 👉 Biến pool thành promise
+const promisePool = pool.promise();
+
+// ✅ Dùng promisePool mới để kiểm tra kết nối
+promisePool.getConnection()
   .then(conn => {
     console.log("✅ DB connected successfully");
     conn.release();
@@ -22,4 +28,4 @@ pool.getConnection()
     console.error("❌ DB connection error:", err.message);
   });
 
-module.exports = pool.promise();
+module.exports = promisePool;
