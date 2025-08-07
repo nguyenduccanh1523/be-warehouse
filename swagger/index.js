@@ -12,6 +12,7 @@ const options = {
       schemas: {
         ...require('./components/supplier'),
         ...require('./components/customer'),
+        ...require('./components/product'),
       }
     },
     paths: {
@@ -19,6 +20,7 @@ const options = {
       ...require('./paths/users'),
       ...require('./paths/suppliers'),
       ...require('./paths/customers'),
+      ...require('./paths/products'),
     }
   },
   apis: []
