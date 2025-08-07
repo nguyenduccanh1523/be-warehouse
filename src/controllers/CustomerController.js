@@ -1,19 +1,42 @@
-// const Customer = require('../models/Customer');
-// const CustomerService = require('../services/CustomerService');
 
-// class CustomerController {
-//   async getAllCustomers(req, res) {
-//     const customers = await CustomerService.getAllCustomers();
-//     res.json(customers);
-//   }
+const CustomerService = require('../services/CustomerService');
 
-//   async createCustomer(req, res) {
-//     const {name, email, phone, address} = req.body;
-//     const newCustomer = new Customer(null, name, email, phone, address);
-//     const customer = await CustomerService.createCustomer(newCustomer);
-//     res.status(201).json({customer});
-//   }
+class CustomerController {
+  async getAll(req, res) {
+    const customers = await CustomerService.getAll(req.query);
+    res.json(customers);
+  }
 
-// }
+  async getById(req, res) {
+    const { id } = req.params;
+    const customer = await CustomerService.getById(id);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    res.json(customer);
+  }
 
-// module.exports = new CustomerController();
+  async create(req, res) {
+    const customer = await CustomerService.create(req.body);
+    res.status(201).json({ customer });
+  }
+
+  async update(req, res) {
+    const customer = await CustomerService.update(req.params.id, req.body);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    res.json(customer);
+  }
+
+  async delete(req, res) {
+    const deleted = await CustomerService.delete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    res.status(204).send();
+  }
+
+}
+
+module.exports = new CustomerController();
