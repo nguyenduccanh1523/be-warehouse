@@ -13,14 +13,19 @@ const options = {
         ...require('./components/supplier'),
         ...require('./components/customer'),
         ...require('./components/product'),
+        ...require('./components/order'),
+        ...require('./components/orderitem'),
       }
     },
     paths: {
       ...require('./paths/auth'),
+      ...require('./paths/products'),
+      ...require('./paths/orders'),
+      ...require('./paths/orderitems'),
       ...require('./paths/users'),
       ...require('./paths/suppliers'),
       ...require('./paths/customers'),
-      ...require('./paths/products'),
+      
     }
   },
   apis: []

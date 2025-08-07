@@ -1,7 +1,7 @@
 const db = require("../config/db");
-const Product = require("../models/Product");
+const Order = require("../models/Order");
 
-class ProductRepository {
+class OrderRepository {
   async findAll({
     limit = 10,
     skip = 0,
@@ -17,24 +17,26 @@ class ProductRepository {
         ? select
             .split(",")
             .map((col) => `\`${col.trim()}\``)
-            .join(", ") +
-          `,
-        suppliers.id AS supplier_id_real,
-        suppliers.name AS supplier_name,
-        suppliers.phone AS supplier_phone,
-        suppliers.address AS supplier_address`
+            .join(", ")`,
+        customers.id AS customer_id_real,
+        customers.name AS customer_name,
+        customers.email AS customer_email,
+        customers.phone AS customer_phone,
+        customers.address AS customer_address`
         : `
-      products.id, products.name, products.quantity, products.price, products.supplier_id,
-      suppliers.id AS supplier_id_real,
-      suppliers.name AS supplier_name,
-      suppliers.phone AS supplier_phone,
-      suppliers.address AS supplier_address`;
+      orders.id, orders.order_date, orders.total_amount, orders.customer_id,
+      customers.id AS customer_id_real,
+      customers.name AS customer_name,
+      customers.email AS customer_email,
+      customers.phone AS customer_phone,
+      customers.address AS customer_address`;
 
     let whereClause = "WHERE 1";
     const params = [];
 
+    // Search
     if (q) {
-      whereClause += ` AND (name LIKE ?)`;
+      whereClause += ` AND (order_number LIKE ?)`;
       params.push(`%${q}%`);
     }
 
@@ -51,7 +53,7 @@ class ProductRepository {
       orderClause = `ORDER BY \`${column}\` ${direction}`;
     }
 
-    const fromClause = `FROM products LEFT JOIN suppliers ON products.supplier_id = suppliers.id`;
+    const fromClause = `FROM orders LEFT JOIN customers ON orders.customer_id = customers.id`;
 
     const countQuery = `SELECT COUNT(*) as total ${fromClause} ${whereClause}`;
     const [countResult] = await db.query(countQuery, params);
@@ -64,21 +66,23 @@ class ProductRepository {
 
     const data = rows.map((row) => {
       const {
-        supplier_id_real,
-        supplier_name,
-        supplier_phone,
-        supplier_address,
-        ...productFields
+        customer_id_real,
+        customer_name,
+        customer_email,
+        customer_phone,
+        customer_address,
+        ...orderFields
       } = row;
 
       return {
-        ...productFields,
-        supplier: supplier_id_real
+        ...orderFields,
+        customer: customer_id_real
           ? {
-              id: supplier_id_real,
-              name: supplier_name,
-              phone: supplier_phone,
-              address: supplier_address,
+              id: customer_id_real,
+              name: customer_name,
+              email: customer_email,
+              phone: customer_phone,
+              address: customer_address,
             }
           : null,
       };
@@ -93,45 +97,42 @@ class ProductRepository {
   }
 
   async findById(id) {
-    const query = "SELECT * FROM products WHERE id = ?";
+    const query = "SELECT * FROM orders WHERE id = ?";
     const [rows] = await db.query(query, [id]);
-    if (rows.length === 0) return null;
-    return new Product(rows[0]);
+    return rows.length ? new Order(rows[0]) : null;
   }
 
-  async create(product) {
+  async create(orderData) {
     const query =
-      "INSERT INTO products (name, quantity, price, supplier_id) VALUES (?, ?, ?, ?)";
+      "INSERT INTO orders (customer_id, order_date, total_amount) VALUES (?, ?, ?)";
     const [result] = await db.query(query, [
-      product.name,
-      product.quantity,
-      product.price,
-      product.supplier_id,
+      orderData.customer_id,
+      orderData.order_date,
+      orderData.total_amount,
     ]);
-    return new Product({
+    return new Order({
       id: result.insertId,
-      ...product,
+      ...orderData,
     });
   }
 
-  async update(id, product) {
+  async update(id, orderData) {
     const query =
-      "UPDATE products SET name = ?, quantity = ?, price = ?, supplier_id = ? WHERE id = ?";
+      "UPDATE orders SET customer_id = ?, order_date = ?, total_amount = ? WHERE id = ?";
     const [result] = await db.query(query, [
-      product.name,
-      product.quantity,
-      product.price,
-      product.supplier_id,
+      orderData.customer_id,
+      orderData.order_date,
+      orderData.total_amount,
       id,
     ]);
-    return result.affectedRows > 0 ? new Product({ id, ...product }) : null;
+    return result.affectedRows > 0 ? new Order({ id, ...orderData }) : null;
   }
 
   async delete(id) {
-    const query = "DELETE FROM products WHERE id = ?";
+    const query = "DELETE FROM orders WHERE id = ?";
     const [result] = await db.query(query, [id]);
     return result.affectedRows > 0;
   }
 }
 
-module.exports = new ProductRepository();
+module.exports = new OrderRepository();
