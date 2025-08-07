@@ -1,18 +1,14 @@
-FROM node:20-alpine
+# Dockerfile
+
+FROM node:18
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy source code
 COPY . .
 
-# Expose port (3001 như bạn đang chạy local)
-EXPOSE 3001
+EXPOSE 3000
 
-# Start app
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
