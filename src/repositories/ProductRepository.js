@@ -12,66 +12,105 @@ class ProductRepository {
   } = {}) {
     const parsedLimit = Number(limit);
     const parsedSkip = Number(skip);
-    const columns =
-      select && select !== "*"
-        ? select
-            .split(",")
-            .map((col) => `\`${col.trim()}\``)
-            .join(", ") +
-          `,
-        suppliers.id AS supplier_id_real,
-        suppliers.name AS supplier_name,
-        suppliers.phone AS supplier_phone,
-        suppliers.address AS supplier_address`
-        : `
-      products.id, products.name, products.quantity, products.price, products.supplier_id,
-      suppliers.id AS supplier_id_real,
-      suppliers.name AS supplier_name,
-      suppliers.phone AS supplier_phone,
-      suppliers.address AS supplier_address`;
 
+    // Map tên field -> tên cột đầy đủ
+    const columnMap = {
+      id: "products.id",
+      name: "products.name",
+      quantity: "products.quantity",
+      price: "products.price",
+      supplier_id: "products.supplier_id",
+      supplier_name: "suppliers.name",
+      supplier_phone: "suppliers.phone",
+      supplier_address: "suppliers.address",
+    };
+
+    const sortMap = {
+      id: "products.id",
+      name: "products.name",
+      price: "products.price",
+      quantity: "products.quantity",
+      supplier_name: "suppliers.name",
+    };
+
+    // Cột SELECT
+    let columns;
+    if (select && select !== "*") {
+      const mapped = select
+        .split(",")
+        .map((s) => s.trim())
+        .map((col) => (columnMap[col] ? `${columnMap[col]} AS ${col}` : null))
+        .filter(Boolean);
+
+      // Luôn bổ sung thông tin supplier
+      mapped.push(
+        "suppliers.id AS supplier_id_real",
+        "suppliers.name AS supplier_name",
+        "suppliers.phone AS supplier_phone",
+        "suppliers.address AS supplier_address"
+      );
+
+      columns = mapped.join(", ");
+    } else {
+      columns = [
+        "products.id",
+        "products.name",
+        "products.quantity",
+        "products.price",
+        "products.supplier_id",
+        "suppliers.id AS supplier_id_real",
+        "suppliers.name AS supplier_name",
+        "suppliers.phone AS supplier_phone",
+        "suppliers.address AS supplier_address",
+      ].join(", ");
+    }
+
+    // WHERE clause
     let whereClause = "WHERE 1";
     const params = [];
 
     if (q) {
-      whereClause += ` AND (name LIKE ?)`;
+      whereClause += ` AND products.name LIKE ?`;
       params.push(`%${q}%`);
     }
 
     for (const [key, value] of Object.entries(filters)) {
       if (["limit", "skip", "select", "sort", "q"].includes(key)) continue;
-      whereClause += ` AND \`${key}\` = ?`;
+      const col = columnMap[key];
+      if (!col) continue;
+      whereClause += ` AND ${col} = ?`;
       params.push(value);
     }
 
+    // ORDER BY
     let orderClause = "";
     if (sort) {
       const direction = sort.startsWith("-") ? "DESC" : "ASC";
       const column = sort.replace(/^[-+]/, "");
-      orderClause = `ORDER BY \`${column}\` ${direction}`;
+      const col = sortMap[column];
+      if (col) orderClause = `ORDER BY ${col} ${direction}`;
     }
 
     const fromClause = `FROM products LEFT JOIN suppliers ON products.supplier_id = suppliers.id`;
 
+    // Query đếm tổng
     const countQuery = `SELECT COUNT(*) as total ${fromClause} ${whereClause}`;
-    const [countResult] = await db.query(countQuery, params);
+    const [countResult] = await db.query(countQuery, [...params]);
     const total = countResult[0].total;
 
+    // Query data
     const query = `SELECT ${columns} ${fromClause} ${whereClause} ${orderClause} LIMIT ? OFFSET ?`;
-    params.push(parsedLimit, parsedSkip);
-
     const [rows] = await db.query(query, [...params, parsedLimit, parsedSkip]);
 
-    const data = rows.map((row) => {
-      const {
+    // Format kết quả
+    const data = rows.map(
+      ({
         supplier_id_real,
         supplier_name,
         supplier_phone,
         supplier_address,
         ...productFields
-      } = row;
-
-      return {
+      }) => ({
         ...productFields,
         supplier: supplier_id_real
           ? {
@@ -81,8 +120,8 @@ class ProductRepository {
               address: supplier_address,
             }
           : null,
-      };
-    });
+      })
+    );
 
     return {
       data,
